@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <title>Product Mood Rating</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 30px 10px;
+      color: #333;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      padding: 30px 30px 40px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    /* Emoji selector */
+    .emoji-selector {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 35px;
+    }
+
+    .emoji-selector span {
+      font-size: 38px;
+      cursor: pointer;
+      user-select: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    .emoji-selector span:hover {
+      background-color: #e0e7ff;
+      border-color: #5c7cfa;
+    }
+
+    .emoji-selector span.selected {
+      background-color: #5c7cfa;
+      color: white;
+      border-color: #3b56d8;
+      box-shadow: 0 6px 12px rgba(59, 86, 216, 0.3);
+    }
+
+    /* Products grid */
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 26px;
+    }
+
+    .product {
+      background: #f9fbfd;
+      border-radius: 14px;
+      padding: 18px 18px 26px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+      transition: box-shadow 0.3s ease, transform 0.15s ease;
+    }
+
+    .product:hover {
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      transform: translateY(-3px);
+    }
+
+    .product img {
+      width: 130px;
+      height: 130px;
+      object-fit: contain;
+      border-radius: 14px;
+      margin-bottom: 15px;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .product h3 {
+      margin: 0 0 14px 0;
+      font-weight: 600;
+      color: #2a2e42;
+      text-align: center;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      justify-content: center;
+      margin-top: auto;
+    }
+
+    .buttons button {
+      background-color: #4c6ef5;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 9px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.25s;
+      flex: 1;
+      user-select: none;
+    }
+
+    .buttons button:hover {
+      background-color: #3954d1;
+    }
+
+    .rating-count {
+      margin-top: 12px;
+      font-weight: 600;
+      color: #555;
+      font-size: 14px;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 14px;
+      max-width: 480px;
+      width: 100%;
+      padding: 25px 30px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #888;
+      user-select: none;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: #555;
+    }
+
+    /* Notification */
+    #notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #2f855a;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      box-shadow: 0 5px 18px rgba(47, 133, 90, 0.7);
+      display: none;
+      user-select: none;
+      z-index: 150;
+    }
+
+    /* Chart container */
+    #chartContainer {
+      margin-top: 50px;
+    }
+
+    #chartContainer h2 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 520px) {
+      .emoji-selector {
+        gap: 14px;
+      }
+      .emoji-selector span {
+        font-size: 30px;
+        padding: 10px 12px;
+      }
+      .buttons {
+        flex-direction: column;
+      }
+      .buttons button {
+        flex: none;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Rate the Product Mood</h1>
+
+    <div class="emoji-selector" id="emojiSelector"></div>
+
+    <div class="products" id="products"></div>
+
+    <div id="chartContainer">
+      <h2>Overall Mood Chart</h2>
+      <canvas id="moodChart" width="600" height="300"></canvas>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="modalClose">&times;</span>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="notification"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Mood options
+    const moods = [
+      { emoji: "😄", label: "Happy" },
+      { emoji: "😐", label: "Okay" },
+      { emoji: "😢", label: "Sad" },
+    ];
+
+    // Products with images
+    const products = [
+      { id: 1, name: "Notebook", img:"https://unsplash.com/photos/zvKx6ixUhWQ/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8MTZ8fGJvb2t8ZW58MHx8fHwxNzQ4NTY4MTE4fDA&force=true" },
+      { id: 2, name: "Pen", img: "https://unsplash.com/photos/6rXpQzfCYlw/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8NHx8cGVufGVufDB8fHx8MTc0ODUxNzc0NXww&force=true" },
+      { id: 3, name: "Backpack", img: "https://unsplash.com/photos/_H0fjILH5Vw/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Mnx8YmFja3BhY2t8ZW58MHx8fHwxNzQ4NTk0MTY5fDA&force=true" },
+      { id: 4, name: "Water Bottle", img: "https://unsplash.com/photos/dGIEMeN2MV8/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Mnx8d2F0ZXJib3R0bGV8ZW58MHx8fHwxNzQ4NDg1MTA4fDA&force=true" },
+      { id: 5, name: "Headphones", img: "https://unsplash.com/photos/PDX_a_82obo/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Mnx8aGVhZHBob25lfGVufDB8fHx8MTc0ODUxMjQyMXww&force=true" },
+    ];
+
+    let selectedMood = null;
+
+    const emojiSelector = document.getElementById("emojiSelector");
+    const productsContainer = document.getElementById("products");
+    const modal = document.getElementById("modal");
+    const modalBody = document.getElementById("modalBody");
+    const modalClose = document.getElementById("modalClose");
+    const notification = document.getElementById("notification");
+
+    // Show notification messages
+    function showNotification(message) {
+      notification.textContent = message;
+      notification.style.display = "block";
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 2500);
+    }
+
+    // Render mood emojis
+    function renderMoods() {
+      emojiSelector.innerHTML = moods
+        .map(
+          (mood, i) =>
+            `<span title="${mood.label}" data-index="${i}">${mood.emoji}</span>`
+        )
+        .join("");
+    }
+
+    // Render products
+    function renderProducts() {
+      productsContainer.innerHTML = products
+        .map(
+          (p) => `
+          <div class="product" data-id="${p.id}">
+            <img src="${p.img}" alt="${p.name}" />
+            <h3>${p.name}</h3>
+            <div class="buttons">
+              <button onclick="rateProduct(${p.id})">Rate</button>
+              <button onclick="resetRatings(${p.id})">Reset</button>
+              <button onclick="showRatings(${p.id})">Show</button>
+            </div>
+            <p class="rating-count" id="rating-count-${p.id}">Ratings: 0</p>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    // Update rating count display
+    function updateRatingCount(productId) {
+      const ratings = JSON.parse(localStorage.getItem(`ratings-${productId}`)) || [];
+      const countElem = document.getElementById(`rating-count-${productId}`);
+      countElem.textContent = `Ratings: ${ratings.length}`;
+      updateChart();
+    }
+
+    // Rate a product with the selected mood
+    function rateProduct(productId) {
+      if (!selectedMood) {
+        showNotification("Please select a mood first.");
+        return;
+      }
+      const key = `ratings-${productId}`;
+      const ratings = JSON.parse(localStorage.getItem(key)) || [];
+      ratings.push(selectedMood.label);
+      localStorage.setItem(key, JSON.stringify(ratings));
+      updateRatingCount(productId);
+      showNotification(`You rated ${products.find(p => p.id === productId).name} as "${selectedMood.label}".`);
+    }
+
+    // Reset ratings for a product
+    function resetRatings(productId) {
+      localStorage.removeItem(`ratings-${productId}`);
+      updateRatingCount(productId);
+      showNotification(`Ratings reset for ${products.find(p => p.id === productId).name}.`);
+    }
+
+    // Show ratings breakdown in modal
+    function showRatings(productId) {
+      const ratings = JSON.parse(localStorage.getItem(`ratings-${productId}`)) || [];
+      if (ratings.length === 0) {
+        showNotification("No ratings yet for this product.");
+        return;
+      }
+
+      // Count moods
+      const counts = { Happy: 0, Okay: 0, Sad: 0 };
+      ratings.forEach((r) => {
+        counts[r] = (counts[r] || 0) + 1;
+      });
+
+      modalBody.innerHTML = `
+        <h2>Ratings for ${products.find(p => p.id === productId).name}</h2>
+        <p>Total ratings: <strong>${ratings.length}</strong></p>
+        <ul>
+          <li>😄 Happy: ${counts.Happy}</li>
+          <li>😐 Okay: ${counts.Okay}</li>
+          <li>😢 Sad: ${counts.Sad}</li>
+        </ul>
+      `;
+      modal.style.display = "flex";
+    }
+
+    // Close modal
+    modalClose.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    // Handle mood selection click
+    emojiSelector.addEventListener("click", (e) => {
+      if (e.target.tagName === "SPAN") {
+        const idx = e.target.getAttribute("data-index");
+        selectedMood = moods[idx];
+        document.querySelectorAll(".emoji-selector span").forEach((el) => {
+          el.classList.remove("selected");
+        });
+        e.target.classList.add("selected");
+      }
+    });
+
+    // Setup initial
+    renderMoods();
+    renderProducts();
+    products.forEach(p => updateRatingCount(p.id));
+
+    // Chart.js for overall moods
+    const ctx = document.getElementById("moodChart").getContext("2d");
+
+    const moodChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: moods.map(m => m.label),
+        datasets: [{
+          data: [0, 0, 0],
+          backgroundColor: ["#4caf50", "#ffb300", "#f44336"],
+          borderColor: "#fff",
+          borderWidth: 2,
+          hoverOffset: 20,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              font: { size: 14 },
+              color: "#444",
+            },
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: "#222",
+            titleFont: { size: 16 },
+            bodyFont: { size: 14 },
+          },
+        },
+      },
+    });
+
+    // Update chart with all ratings combined
+    function updateChart() {
+      let allRatings = [];
+      products.forEach(p => {
+        const productRatings = JSON.parse(localStorage.getItem(`ratings-${p.id}`)) || [];
+        allRatings = allRatings.concat(productRatings);
+      });
+      const counts = { Happy: 0, Okay: 0, Sad: 0 };
+      allRatings.forEach(r => {
+        counts[r] = (counts[r] || 0) + 1;
+      });
+      moodChart.data.datasets[0].data = [counts.Happy, counts.Okay, counts.Sad];
+      moodChart.update();
+    }
+  </script>
+</body>
+</html>
